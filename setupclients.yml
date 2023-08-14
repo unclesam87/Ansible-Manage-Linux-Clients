@@ -1,0 +1,181 @@
+- hosts: clients
+  become_method: su
+  become_user: root
+  become: true
+  vars: 
+    cups_ppd_shared_location: "/opt/share/ppd"
+  tasks:
+    - name: remove  xguest
+      package:
+        name: xguest
+        state: absent
+    - name: Install thunderbird
+      package:
+        name: thunderbird
+        state: present
+    - name: Install libreoffice
+      package:
+        name: libreoffice
+        state: present
+    - name: Install firefox
+      package:
+        name: firefox
+        state: present    
+    - name: Install chromium
+      package:
+        name: chromium
+        state: present
+    - name: change chromium password store
+      ansible.builtin.lineinfile:
+        state: present
+        path: /usr/share/applications/chromium-browser.desktop
+        regexp: "Exec=/usr/bin/chromium-browser %U"
+        line: "Exec=/usr/bin/chromium-browser --password-store=basic %U"
+        backrefs: yes
+    - name: change chromium password store other modes
+      ansible.builtin.lineinfile:
+        state: present
+        path: /usr/share/applications/chromium-browser.desktop
+        regexp: "chromium-browser %U"
+        line: "chromium-browser --password-store=basic %U"
+        backrefs: yes
+    - name: change chromium password store other modes
+      ansible.builtin.lineinfile:
+        state: present
+        path: /usr/share/applications/chromium-browser.desktop
+        regexp: "chromium-browser --incognito %U"
+        line: "chromium-browser --password-store=basic --incognito %U"
+        backrefs: yes
+    - name: install cinnamon-desktop
+      package: 
+        name: "@cinnamon-desktop"
+        state: present
+    - name: install lightdm
+      package:  
+        name: lightdm 
+        state: present
+    - name: turn on lightdm
+      ansible.builtin.systemd:
+        name: lightdm
+        enabled: true
+        masked: no
+    - name: add entry to /etc/pam.d/lightdm for user password
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/lightdm
+        insertbefore: BOF
+        state: present
+        line: "auth sufficient pam_succeed_if.so user ingroup nopasswdlogin"
+        backup: yes
+    - name: Ensure group "nopasswdlogin" exists
+      ansible.builtin.group:
+        name: nopasswdlogin
+        state: present
+    - name: Add the user 'guest' with a specific uid and a primary group of 'nopasswdlogin'
+      ansible.builtin.user:
+        name: guest
+        comment: guestaccount
+        group: nopasswdlogin
+        home: /guest
+    - name: Disable SELinux
+      ansible.posix.selinux:
+        state: disabled
+    - name: "Copy startup.sh"
+      ansible.builtin.template:       
+        src: templates/startup.j2 
+        dest: "/usr/local/bin/startup.sh"
+        owner: root
+        group: root
+        mode: "755"
+    - name: "Copy cleanup.sh"
+      ansible.builtin.template:
+        src: templates/cleanup.j2
+        dest: "/usr/local/bin/cleanup.sh"
+        owner: root
+        group: root
+        mode: "755"
+    - name: "Copy lightdm.conf"
+      ansible.builtin.template:
+        src: templates/lightdm.conf.j2
+        dest: "/etc/lightdm/lightdm.conf.d/50-myconfig.conf"
+        owner: root
+        group: root
+        mode: "755"
+    - name: hide sysinst from the loginscreen
+      blockinfile:
+        path: /var/lib/AccountsService/users/sysinst
+        state: present
+        block: |
+          [User]
+          SystemAccount=true
+        backup: yes
+        create: true
+    - name: remove old usercode script
+      ansible.builtin.file:
+        state: absent
+        path: "/etc/skel/Desktop/usercode.j2"
+    - name: remove old usercode script part2
+      ansible.builtin.file:
+        state: absent
+        path: "/etc/skel/Desktop/Druckercode.sh"
+    - name: copy usercode script
+      ansible.builtin.template:
+        src: templates/usercode.j2
+        dest: "/usr/sbin/usercode.sh"
+        owner: root
+        group: root
+        mode: "0755"
+    - name: create directory
+      ansible.builtin.file:
+        path: "/etc/skel/Desktop"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+    - name: copy usercode desktop link
+      ansible.builtin.template:
+        src: templates/usercode-desktop.j2
+        dest: "/etc/skel/Desktop/usercode.desktop"
+        owner: root
+        group: root
+        mode: "0755"
+    - name: "Get current systemd default"
+      command: "systemctl get-default"
+      changed_when: false
+      register: systemdefault
+    - name: "Set default to graphical target"
+      command: "systemctl set-default graphical.target"
+      when: "'graphical' not in systemdefault.stdout"
+      register: graphical
+    - name: install cups
+      package:
+        name: cups
+        state: latest
+    - name: Start and enable cups service
+      service:
+        name: cups
+        state: started
+        enabled: true
+    - name: add cups ppd folder
+      file:
+        path: "{{cups_ppd_shared_location}}"
+        recurse: yes
+        state: directory
+    - name: copy ppd from files to client
+      ansible.builtin.copy:
+        src: files/ppd/PPDDOWNLOAD-PS.ppd
+        dest: "{{cups_ppd_shared_location}}/PPD.ppd"
+        owner: root
+        group: root
+        mode: '0644'
+    - name: check which printer are installed 
+      shell: 
+        cmd: "lpstat -t"
+      ignore_errors: true
+      register: cups_printers
+    - name: if printer "Printername"" is not installed
+      shell: 
+        cmd: "lpadmin -p Printername -E -v socket://ip:9100 -P /opt/share/ppd/PPD.ppd -o finisher=FinAMURBBK -o print-color-mode=monochrome -o printer-is-shared=false -o OptionTray=LCT -o Duplex=None -o UserCode=Custom.STRING -o PageSize=A4"
+      when: "'Ricoh-Teekueche' not in cups_printers.stdout"  
+    - name: Conditionally reboot the machine with all defaults
+      ansible.builtin.reboot:
+      when: graphical is changed

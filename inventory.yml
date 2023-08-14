@@ -1,0 +1,10 @@
+all:
+  hosts:
+  children:
+    clients:
+      hosts:
+        fqdn:
+          macaddress: "00:00:00:00:00:00"
+  vars:
+    ansible_user: userforlogin
+    ansible_become_pass: password

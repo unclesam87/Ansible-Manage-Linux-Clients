@@ -1,0 +1,11 @@
+#!/bin/sh
+
+usercode=$(zenity --entry --title="Usercode" --text="Enter usercode:" )
+if [[ $usercode =~ ^[0-9]+$ ]]; 
+    then
+        rm ~/.cups/lpoptions
+        lpoptions -p Printername -o UserCode=Custom.$usercode 
+        lpoptions -p SecondPrintername -o UserCode=Custom.$usercode
+    else
+    zenity --info --text="No usercode entered" --title="Druckercode" --ok-label="okay"
+fi

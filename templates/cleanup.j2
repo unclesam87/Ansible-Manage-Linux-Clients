@@ -1,0 +1,9 @@
+#!/bin/sh
+    guestuser="guest"
+    ## Clear up the guest user session
+    if [[ "$USER" = "$guestuser" ]]; then
+        rm -rf /tmp/"$guestuser"
+        umount -l /$guestuser
+        rm -rf /$guestuser
+    fi
+exit 0

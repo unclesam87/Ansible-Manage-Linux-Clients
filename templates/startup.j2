@@ -1,0 +1,10 @@
+#!/bin/sh
+    guestuser="guest"
+    ## Set up guest user session
+    if [[ "$USER" = "$guestuser" ]]; then
+        mkdir /"$guestuser"
+        mount -t tmpfs -o size=50% none /"$guestuser"
+        cp /etc/skel/. /"$guestuser" -r
+        chown -R "$guestuser":nopasswdlogin /"$guestuser"
+    fi
+exit 0
