@@ -29,6 +29,22 @@ firewall --enabled --ssh
 for ventoy auto install plugin look at this:
 > https://www.ventoy.net/en/plugin_autoinstall.html
 
+## Install Ricoh Printer
+as we needed an method to install ricoh printer with lpoptions (so we would be able to set up addtional options), we came up with that solution:
+
+```
+    - name: check which printer are installed 
+      shell: 
+        cmd: "lpstat -t"
+      ignore_errors: true
+      register: cups_printers
+    - name: if printer "Printername"" is not installed
+      shell: 
+        cmd: "lpadmin -p Printername -E -v socket://ip:9100 -P /opt/share/ppd/PPD.ppd -o finisher=FinAMURBBK -o print-color-mode=monochrome -o printer-is-shared=false -o OptionTray=LCT -o Duplex=None -o UserCode=Custom.STRING -o PageSize=A4"
+      when: "'Printername' not in cups_printers.stdout"
+```
+First we check which printers are installed - when the printer with "Printername" is missing, we add it (see the lines with "register: cups_printers" and "when: "'Printername' not in cups_printers.stdout"
+
 ## Wake on LAN and Update
 the wol-upgrade playbook is used to wake them up and update them - and when something changed to reboot them
 for that we add to the inventory for every client an line like that
