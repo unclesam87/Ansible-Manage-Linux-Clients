@@ -12,3 +12,18 @@ all:
         client fqdn:
           macaddress: "00:00:00:00:00:00"
 ```
+## Setup Clients with Ventoy
+we installed fedora on one client and then copyed the anaconda file and edited it:
+Adding this line and using it with ventoy allows us to name that computer at setup.
+```
+# Network information
+network  --hostname=$$PCNAME$$
+```
+SSH Key for Ansible
+```
+# SSH Key
+sshkey --username=username "key"
+
+# Firewall Rules
+firewall --enabled --ssh
+```
