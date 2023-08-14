@@ -30,3 +30,5 @@ sshkey --username=username "key"
 # Firewall Rules
 firewall --enabled --ssh
 ```
+for ventoy auto install plugin look at this:
+> https://www.ventoy.net/en/plugin_autoinstall.html
