@@ -42,6 +42,6 @@ all:
           macaddress: "00:00:00:00:00:00"
 ```
 ## ToDos
-- [] use xguest because safer
-- [] clean up the programm installation into an list that can easly edited
-- [] clean up printer install into an role
+- [ ] use xguest because safer
+- [ ] clean up the programm installation into an list that can easly edited
+- [ ] clean up printer install into an role
