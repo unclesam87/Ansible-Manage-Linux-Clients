@@ -14,6 +14,9 @@ all:
 ```
 ## Setup Clients with Ventoy
 we installed fedora on one client and then copyed the anaconda file and edited it:
+> all choices made during the installation are saved into a file named anaconda-ks.cfg, located in the /root/
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/installation_guide/sect-kickstart-howto
+
 Adding this line and using it with ventoy allows us to name that computer at setup.
 ```
 # Network information
