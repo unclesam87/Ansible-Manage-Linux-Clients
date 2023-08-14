@@ -175,7 +175,7 @@
     - name: if printer "Printername"" is not installed
       shell: 
         cmd: "lpadmin -p Printername -E -v socket://ip:9100 -P /opt/share/ppd/PPD.ppd -o finisher=FinAMURBBK -o print-color-mode=monochrome -o printer-is-shared=false -o OptionTray=LCT -o Duplex=None -o UserCode=Custom.STRING -o PageSize=A4"
-      when: "'Ricoh-Teekueche' not in cups_printers.stdout"  
+      when: "'Printername' not in cups_printers.stdout"  
     - name: Conditionally reboot the machine with all defaults
       ansible.builtin.reboot:
       when: graphical is changed
