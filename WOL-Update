@@ -1,0 +1,28 @@
+- name: start wol
+  hosts: clients
+  gather_facts: no
+  tasks:
+    - name: Send magic Wake-On-Lan packet to turn on individual systems
+      community.general.wakeonlan:
+        mac: "{{ hostvars[inventory_hostname].macaddress }}"
+      delegate_to: localhost
+    - name: Wait for port 22 to become open on the host, don't start checking for 10 seconds
+      ansible.builtin.wait_for:
+        port: 22
+        delay: 10
+- name: lets go
+  hosts: clients
+  become_method: su
+  become_user: root
+  become: true
+  tasks:
+    - name: Upgrade all packages
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+      register: result
+      ignore_errors: true
+    - name: Reboot
+      ansible.builtin.reboot:
+        reboot_timeout: 3600
+      when: result is changed
