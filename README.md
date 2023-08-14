@@ -43,5 +43,6 @@ all:
 ```
 ## ToDos
 - [ ] use xguest because safer
+- [ ] log out user when inactive for an certain time
 - [ ] clean up the programm installation into an list that can easly edited
 - [ ] clean up printer install into an role
