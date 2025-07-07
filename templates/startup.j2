@@ -1,10 +1,25 @@
-#!/bin/sh
-    guestuser="guest"
-    ## Set up guest user session
-    if [[ "$USER" = "$guestuser" ]]; then
-        mkdir /"$guestuser"
-        mount -t tmpfs -o size=50% none /"$guestuser"
-        cp /etc/skel/. /"$guestuser" -r
-        chown -R "$guestuser":nopasswdlogin /"$guestuser"
-    fi
+#!/bin/bash
+guestuser="guest"
+guestdir="/$guestuser"
+
+if [ "$USER" = "$guestuser" ]; then
+    # Unmount, falls bereits gemountet
+    mountpoint -q "$guestdir" && umount "$guestdir"
+
+    # Lösche eventuell vorhandene Daten
+    rm -rf "$guestdir"
+
+    # Neu erstellen
+    mkdir -p "$guestdir"
+
+    # tmpfs mounten (flüchtiger Speicher, gelöscht nach Reboot)
+    mount -t tmpfs -o size=50% none "$guestdir"
+
+    # Standarddaten kopieren
+    cp -a /etc/skel/. "$guestdir"
+
+    # Richtige Berechtigungen setzen
+    chown -R "$guestuser":"$guestuser" "$guestdir"
+fi
+
 exit 0
